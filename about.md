@@ -4,10 +4,14 @@ title: About
 permalink: /about/
 ---
 
-![portrait](/assets/about/jim.jpg)
+![portrait](/assets/about/jim_tiny.jpg)
 
-I'm a PhD Candidate in Neuroscience at Harvard University, building animal behavior analysis tools in [Chris Harvey's lab](http://harveylab.hms.harvard.edu/). 
-Currently a research intern at [Perceptive Automata](https://www.perceptiveautomata.com/), working on giving human intuition to autonomous vehicles.
+I'm a machine learning engineer at [Zoox](https://www.zoox.com/), training and shipping foundation models for 
+robot perception.
+
+Previously, I was a research scientist at [Perceptive Automata](https://www.perceptiveautomata.com/), helping autonomous vehicles intuitively understand human behavior.
+
+Before that, I did my PhD in Neuroscience at Harvard, building novel computer vision pipelines for analyzing animal behavior in [Chris Harvey's lab](http://harveylab.hms.harvard.edu/). 
 
 ## Find me online
 
