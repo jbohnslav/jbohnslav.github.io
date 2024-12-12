@@ -1,0 +1,67 @@
+baseURL: https://jbohnslav.github.io/
+# baseURL: "/"
+languageCode: en-us
+title: Jim Robinson-Bohnslav
+theme: ["PaperMod"]
+mainsections: ["posts"]
+
+
+menu:
+  main:
+    - identifier: about
+      name: about
+      url: /about/
+    - identifier: archives
+      name: archives
+      url: /archives/
+      # weight: 10
+    - identifier: search
+      name: search
+      url: /search/
+    - identifier: tags
+      name: tags
+      url: /tags/
+      # weight: 20
+    # - identifier: example
+    #   name: example.org
+    #   url: https://example.org
+    #   weight: 30
+
+outputs:
+  home:
+    - HTML
+    - RSS
+    - JSON # necessary for search
+
+params:
+  env: production # to enable google analytics, opengraph, twitter-cards and schema.
+  description: "James Robinson-Bohnslav's personal website"
+  author: "James Robinson-Bohnslav"
+  defaultTheme: auto
+  # disableThemeToggle: true
+  ShowShareButtons: false
+  ShowReadingTime: false
+  # disableSpecial1stPost: true
+  displayFullLangName: false
+  ShowPostNavLinks: true
+  ShowBreadCrumbs: true
+  ShowCodeCopyButtons: true
+  ShowRssButtonInSectionTermList: false
+  ShowAllPagesInArchive: true
+  ShowPageNums: false
+  # homeInfoParams:
+  #   Title: Jim Robinson-Bohnslav
+  #   Content: "Training neural nets for 10 years. Post Arxiv summaries daily. Current: perception foundation models at Zoox. Prev: Cobot, PhD"
+
+  # socialIcons:
+  #   - name: "twitter"
+  #     url: "https://x.com/jbohnslav"
+  #   - name: "bluesky"
+  #     url: "https://bsky.app/profile/jbohnslav.bsky.social"
+  #   - name: "linkedin"
+  #     url: "https://www.linkedin.com/in/jbohnslav/"
+  #   - name: "github"
+  #     url: "https://github.com/jbohnslav"
+  #   - name: "googlescholar"
+  #     url: "https://scholar.google.com/citations?user=iGBWoN8AAAAJ&hl=en"
+      
