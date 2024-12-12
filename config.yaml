@@ -64,4 +64,7 @@ params:
   #     url: "https://github.com/jbohnslav"
   #   - name: "googlescholar"
   #     url: "https://scholar.google.com/citations?user=iGBWoN8AAAAJ&hl=en"
-      
+
+services:
+  googleAnalytics: 
+    ID: "G-VWMGL11SYN"
