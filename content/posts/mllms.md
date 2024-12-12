@@ -2,7 +2,7 @@
 title: "MLLMs, VLMs, LVLMs, LMMs..."
 description: "What do we call these things?"
 date: 2024-12-11T21:11:57-05:00
-draft: true
+draft: false
 tags: ["mllm", "vlm", "lvlm", "lmm"]
 ---
 
