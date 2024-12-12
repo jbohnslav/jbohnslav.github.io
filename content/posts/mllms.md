@@ -28,13 +28,13 @@ The problem is that this name is not specific enough: imagine a model where you 
 
 Proponents: [vLLM](https://docs.vllm.ai/en/latest/usage/multimodal_inputs.html#multimodal-inputs), Llama 3[^1], Pixtral[^2], Gemini[^3], Waymo[^4], Cambrian-1[^5], InternVL2.5 [^6], Mammoth-VL[^7], Florence-VL [^8], Fei Fei Li (NeurIPS)
 
-**Vision-language model (VLM)**
+**Vision-Language Model (VLM)**
 
 VLM is more specific than MLLM, which is good. However, models like CLIP and SigLIP are Vision-Language Models too. They have image encoders, text encoders, can be prompted, etc. But CLIP et al. are not *generative*; they do not produce text. That makes this term confusing to me.  
 
 Proponents: Molmo[^9], [Huggingface (SmolVLM)](https://huggingface.co/blog/smolvlm), PaliGemma 2 [^10], CogVLM[^11], NVILA[^12]
 
-**Large vision-language model (LVLM)**
+**Large Vision-Language Model (LVLM)**
 
 "These models" are large, use vision, and generate language. Pretty good. But InternViT-6B is a CLIP-style model with 6 billion parameters: it's large by any measure. InternViT isn't generative, so it's not the kind of model I mean. This paper[^16] even calls CLIP a VLM and "these models" LVLMs, so I guess generating text is what makes it "Large"?
 
