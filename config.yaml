@@ -35,8 +35,8 @@ outputs:
 
 params:
   env: production # to enable google analytics, opengraph, twitter-cards and schema.
-  description: "James Robinson-Bohnslav's personal website"
-  author: "James Robinson-Bohnslav"
+  description: "Jim Robinson-Bohnslav's personal website"
+  author: "Jim Robinson-Bohnslav"
   defaultTheme: auto
   # disableThemeToggle: true
   ShowShareButtons: false
