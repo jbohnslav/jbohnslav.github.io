@@ -54,7 +54,7 @@ Models focusing on images and videos specifically are going to be extremely valu
 
 Through writing this post, I've convinced myself that VLM is a more specific, useful term. With great apologies to Lucas Beyer and the rest of the SigLIP team, I will call models that learn a joint embedding space between images and text "CLIP-style models."
 
-What do you think we should call VLMs? Let's discuss on Twitter or BlueSky. 
+What do you think we should call VLMs? Let's discuss on [Twitter](https://x.com/jbohnslav/status/1867246633567809725) or [BlueSky](https://bsky.app/profile/jbohnslav.bsky.social/post/3ld4p735ul22q). 
 
 ## References
 
