@@ -1,1 +1,38 @@
-<?xml version="1.0" encoding="utf-8" standalone="yes"?><urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml"><url><loc>http://localhost:1313/</loc><lastmod>2024-12-11T21:11:57-05:00</lastmod></url><url><loc>http://localhost:1313/tags/lmm/</loc><lastmod>2024-12-11T21:11:57-05:00</lastmod></url><url><loc>http://localhost:1313/tags/lvlm/</loc><lastmod>2024-12-11T21:11:57-05:00</lastmod></url><url><loc>http://localhost:1313/tags/mllm/</loc><lastmod>2024-12-11T21:11:57-05:00</lastmod></url><url><loc>http://localhost:1313/posts/mllms/</loc><lastmod>2024-12-11T21:11:57-05:00</lastmod></url><url><loc>http://localhost:1313/posts/</loc><lastmod>2024-12-11T21:11:57-05:00</lastmod></url><url><loc>http://localhost:1313/tags/</loc><lastmod>2024-12-11T21:11:57-05:00</lastmod></url><url><loc>http://localhost:1313/tags/vlm/</loc><lastmod>2024-12-11T21:11:57-05:00</lastmod></url><url><loc>http://localhost:1313/about/</loc><lastmod>2024-12-10T00:00:00+00:00</lastmod></url><url><loc>http://localhost:1313/archives/</loc></url><url><loc>http://localhost:1313/categories/</loc></url><url><loc>http://localhost:1313/search/</loc></url></urlset>
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+  xmlns:xhtml="http://www.w3.org/1999/xhtml">
+  <url>
+    <loc>http://localhost:1313/</loc>
+    <lastmod>2025-07-12T14:05:31-05:00</lastmod>
+  </url><url>
+    <loc>http://localhost:1313/posts/</loc>
+    <lastmod>2025-07-12T14:05:31-05:00</lastmod>
+  </url><url>
+    <loc>http://localhost:1313/tags/lmm/</loc>
+    <lastmod>2024-12-11T21:11:57-05:00</lastmod>
+  </url><url>
+    <loc>http://localhost:1313/tags/lvlm/</loc>
+    <lastmod>2024-12-11T21:11:57-05:00</lastmod>
+  </url><url>
+    <loc>http://localhost:1313/tags/mllm/</loc>
+    <lastmod>2024-12-11T21:11:57-05:00</lastmod>
+  </url><url>
+    <loc>http://localhost:1313/posts/mllms/</loc>
+    <lastmod>2024-12-11T21:11:57-05:00</lastmod>
+  </url><url>
+    <loc>http://localhost:1313/tags/</loc>
+    <lastmod>2024-12-11T21:11:57-05:00</lastmod>
+  </url><url>
+    <loc>http://localhost:1313/tags/vlm/</loc>
+    <lastmod>2024-12-11T21:11:57-05:00</lastmod>
+  </url><url>
+    <loc>http://localhost:1313/about/</loc>
+    <lastmod>2024-12-10T00:00:00+00:00</lastmod>
+  </url><url>
+    <loc>http://localhost:1313/archives/</loc>
+  </url><url>
+    <loc>http://localhost:1313/categories/</loc>
+  </url><url>
+    <loc>http://localhost:1313/search/</loc>
+  </url>
+</urlset>
