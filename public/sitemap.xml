@@ -2,11 +2,32 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
   xmlns:xhtml="http://www.w3.org/1999/xhtml">
   <url>
+    <loc>http://localhost:1313/posts/muon-kimi2-translation/</loc>
+    <lastmod>2025-07-12T14:05:31-04:00</lastmod>
+  </url><url>
     <loc>http://localhost:1313/</loc>
-    <lastmod>2025-07-12T14:05:31-05:00</lastmod>
+    <lastmod>2025-07-12T14:05:31-04:00</lastmod>
+  </url><url>
+    <loc>http://localhost:1313/tags/kimi2/</loc>
+    <lastmod>2025-07-12T14:05:31-04:00</lastmod>
+  </url><url>
+    <loc>http://localhost:1313/tags/moonshot/</loc>
+    <lastmod>2025-07-12T14:05:31-04:00</lastmod>
+  </url><url>
+    <loc>http://localhost:1313/tags/muon/</loc>
+    <lastmod>2025-07-12T14:05:31-04:00</lastmod>
   </url><url>
     <loc>http://localhost:1313/posts/</loc>
-    <lastmod>2025-07-12T14:05:31-05:00</lastmod>
+    <lastmod>2025-07-12T14:05:31-04:00</lastmod>
+  </url><url>
+    <loc>http://localhost:1313/tags/</loc>
+    <lastmod>2025-07-12T14:05:31-04:00</lastmod>
+  </url><url>
+    <loc>http://localhost:1313/tags/technical/</loc>
+    <lastmod>2025-07-12T14:05:31-04:00</lastmod>
+  </url><url>
+    <loc>http://localhost:1313/tags/translation/</loc>
+    <lastmod>2025-07-12T14:05:31-04:00</lastmod>
   </url><url>
     <loc>http://localhost:1313/tags/lmm/</loc>
     <lastmod>2024-12-11T21:11:57-05:00</lastmod>
@@ -18,9 +39,6 @@
     <lastmod>2024-12-11T21:11:57-05:00</lastmod>
   </url><url>
     <loc>http://localhost:1313/posts/mllms/</loc>
-    <lastmod>2024-12-11T21:11:57-05:00</lastmod>
-  </url><url>
-    <loc>http://localhost:1313/tags/</loc>
     <lastmod>2024-12-11T21:11:57-05:00</lastmod>
   </url><url>
     <loc>http://localhost:1313/tags/vlm/</loc>

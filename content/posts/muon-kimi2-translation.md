@@ -1,9 +1,9 @@
 ---
-title: "Defending Muon: A Deep Dive into Moonshot's K2 Optimizer (A Translated Analysis)"
+title: "In Defense of Muon: A Deep Dive into Moonshot's K2 Optimizer (A Translated Analysis)"
 description: "Translation of a detailed technical analysis defending Moonshot AI's Muon optimizer used in their K2 model"
 date: 2025-07-12T14:05:31-04:00
 draft: false
-tags: ["translation", "muon", "kimi2", "moonshot", "optimizer", "ai", "technical"]
+tags: ["translation", "muon", "kimi2", "moonshot", "technical"]
 params:
   author: "toothacher17"
 ---
@@ -11,7 +11,7 @@ params:
 
 ## About the translation
 
-This is a translation of the original blog post by toothacher17. The original post is in Chinese and can be found [here](https://www.zhihu.com/question/1927140506573435010/answer/1927378524513219780). The author's tweet about it is [here](https://x.com/JingyuanLiu123/status/1944071538569097352). I (Jim Robinson-Bohnslav) translated it using Google Translate, Deepseek-R1, Gemini 2.5 Pro, and O3.
+This is a translation of the original blog post by toothacher17. The original post is in Chinese and can be found [here](https://www.zhihu.com/question/1927140506573435010/answer/1927378524513219780). The author's tweet about it is [here](https://x.com/JingyuanLiu123/status/1944071538569097352). I translated it using Google Translate, Deepseek-R1, Gemini 2.5 Pro, and O3. This translation was edited by Kimi K2-Instruct at [kimi.com](https://kimi.com).
 
 ## Original Post
 
@@ -23,32 +23,35 @@ This is a translation of the original blog post by toothacher17. The original po
 
 *Copyright belongs to the author. For commercial reprint, please contact the author for authorization. For non-commercial reprint, please indicate the source.*
 
-*Disclaimer: *Former* Moonshot “No. 1 hype-man” (some say I’m competing with @Andrew Lu) and long-time Feilai Pavilion fan[^1]—just riding the K2 hype wave.*
+*Disclaimer: Self-invited commentator, ex-Moonshot "No.1 Jiang Kernel hype-man" (might be duking it out with @Andrew Lu), Feilai Pavilion[^1] stan and @苏剑林 disciple - shamelessly riding K2's coattails for clout.*
 
+## 1. Concerns Around Using the Muon Optimizer
 
-## 1. Concerns About Using the Muon Optimizer
-
-It's worth noting that the K2 model released by Moonshot was trained end-to-end using the Muon optimizer[^2] [^3]. Muon was first proposed by Keller and performed exceptionally well in Speedrun[^2]. It was then picked up by Moonshot, where they made some adjustments and scaled it up[^3] [^4].
+Moonshot's freshly-dropped **K2** was trained *end-to-end* with the Muon optimizer[^2][^3] – no AdamW safety-net. Muon was first proposed by Keller, crushed it on the Speedrun leaderboard[^2], and then got the Moonshot treatment—some tweaks and serious scale-up[^3] [^4].
 
 ![Muon in the Moonshot paper has huge advantages.](/images/blog_image_1.webp "Moonshot's paper highlighting the significant advantages of Muon.")
 
-In Moonshot’s early work[^3] they highlighted Muon’s impressive token-efficiency and even released a Megatron-LM implementation[^5].  Subsequent discussion on X (formerly Twitter) surfaced three recurring concerns:
+In Moonshot's early tech report[^3] they claimed Muon brings god-level token efficiency and even open-sourced a Megatron-LM implementation[^5]. Still, X (Twitter) was quick to throw tomatoes. Three memes keep resurfacing:
 
-1. **Expensive Operations:** Muon requires the full parameter matrix for its "Normalized Stochasticity" (NS) calculation. In the parallel setting of modern LLM training infrastructure, many believe operating on the full parameter matrix is too expensive.
-2. **Complex Hyperparameter Tuning:** Muon requires "several sets" of different hyperparameter tuning mechanisms, which places higher demands on model tuning. In contrast, self-adaptive optimizers like AdamW seem simpler and more stable to tune.
-3. **Training Instability:** Muon might cause training instability. For instance, Moonshot's own paper[^3] mentioned a potential issue with the attention max logit.
+1. **"Muon needs the *whole* parameter matrix for NS — RIP PCIe."** Muon requires the full parameter matrix for its "Normalized Stochasticity" (NS) calculation. In the parallel setting of modern LLM training infrastructure, many believe operating on the full parameter matrix is too expensive.
 
-In fact, with the release of K2[^6], it's clear these problems aren't deal-breakers. This blog post will attempt to "argue the case" for why.
+2. **"Muon = more hyper-parameter sets = more pain."** Muon requires "several sets" of different hyperparameter tuning mechanisms, which places higher demands on model tuning—a stark contrast to AdamW's "just one knob" simplicity.
 
-## 2. Concern 1: Muon's Infrastructure Scalability
+3. **"Muon training is a minefield—look at that attention logit blow-up!"** Muon might cause training instability. For instance, Moonshot's own paper[^3] mentioned a potential issue with the attention max logit.
 
-First, let's discuss whether operating on Muon's full parameter matrix is truly expensive, and in doing so, fill in a small gap left in the previous paper[^3].
+With K2 now out, these fears seem less scary. This blog tries to **quibble** (狡辩) about why.
 
-To clarify this, we need to detail Zero-1 sharding. Then, by understanding its implementation and the differences between Chinese and international training clusters (Why international? Because some foreign companies are challenging this on X, essentially because they are flush with cash and have too many GPUs), we can explain why the Moonshot team believes Muon's infra is scalable, while others remain skeptical.
+## 2. Concern #1 – "Muon Doesn't Scale"
 
-### 2.1 Zero-1 Sharding
+*(TL;DR – we're going to plug the hole the original Muon paper left about infra cost and prove it scales.)*
 
-First, some background. In modern LLM training involving large models and large clusters, the Zero-1 optimizer is a standard technique. Frameworks like Megatron-LM, DeepSpeed, and FSDP all have support for it.
+First, let's dig into whether operating on Muon's full parameter matrix is truly that expensive, and in doing so, fill a small gap left in the previous paper[^3].
+
+To get to the bottom of this, we'll dive into Zero-1 sharding. Understanding its implementation—and the key differences between Chinese and international training clusters—is the only way to explain why Moonshot thinks Muon scales, while others on X remain skeptical. (And by "international," we mostly mean foreign companies, who are so flush with cash and GPUs they have... different problems.)
+
+### 2.1 Zero-1 Sharding Crash-Course
+
+Modern LLM training relies on **Zero-1 sharding** (implemented in Megatron-LM/DeepSpeed/FSDP).
 
 Zero-1 technology essentially shards the optimizer states—which consume a lot of GPU memory (e.g., AdamW's `exp`, `exp_square`, `fp32_master_weights`)—across the Data Parallel (DP) group.
 
@@ -57,10 +60,11 @@ When using AdamW, the lifecycle of the Zero-1 Distributed Optimizer is as follow
 1. **Gradient Reduce-Scatter:** Perform a `reduce_scatter` of gradients between DP ranks. It's a `reduce_scatter` instead of an `all_reduce` because of the sharding. Each DP rank only needs to ensure the gradients for the local parameters it's responsible for are accurate.
 2. **Local Parameter Update:** Perform the AdamW update calculation for the local parameters. Since AdamW's calculation is element-wise, this step only needs to compute the updates for local parameters.
 3. **Parameter All-Gather:** Perform a parameter `all_gather` between DP ranks. Because each DP rank only updated a portion of the parameters, an `all_gather` is needed for all ranks to get the complete, updated set of parameters.
+  (Non-matrix params – word embeddings, `lm_head`, `rmsnorm_gamma` – stay on boring old AdamW.)
 
 Note that steps 1 and 3, while seemingly communication-heavy, can actually be overlapped with the model's forward/backward pass (a very mature technique all major frameworks implement), so there's no need to worry. In step 2, since AdamW is element-wise and the computation per rank decreases as DP size increases, it's highly scalable.
 
-In summary, this distributed optimizer technology is very friendly to AdamW. The time cost of the AdamW optimizer is typically less than 1% of the entire global step, basically negligible compared to the forward/backward pass.
+In summary, Zero-1 makes AdamW so cheap it usually eats **< 1 % of global-step wall-clock** – basically noise.
 
 However, Muon faces a significant challenge in step 2 because its calculation is *not* element-wise. Muon requires the **full parameter matrix** to compute NS, which inevitably introduces additional communication and a larger computational load (running NS on the entire matrix).
 
@@ -72,7 +76,7 @@ Based on Moonshot's open-source work[^5], it's speculated that their development
 
 ![Early Zero-1 Distributed Optimizer implementation in Megatron-LM.](/images/blog_image_2.webp "Early Zero-1 Distributed Optimizer implementation in Megatron-LM.")
 
-As you can see, the approach is to flatten all optimizer states, concatenate them, and then distribute them evenly across the DP group. This allocation method is optimal for GPU memory because there are no duplicate optimizer states. Moreover, this partitioning is highly beneficial for Muon because most of the local parameters remain complete and can be directly used for the NS operation. Only the parameters at the DP boundaries are split across two DP ranks and become incomplete, requiring special handling.
+The approach is to flatten all optimizer states, concatenate them, and then distribute them evenly across the DP group. This allocation method is memory-optimal (no duplicate states) and highly Muon-friendly, since most local parameters remain complete matrices. Only the parameters at the DP boundaries get split across two ranks, requiring special handling.
 
 Specifically, taking DP0 and DP1 jointly processing `Param 1` as an example, if we were to brainstorm solutions, there are several approaches:
 
@@ -80,11 +84,11 @@ Specifically, taking DP0 and DP1 jointly processing `Param 1` as an example, if 
 2. **Edge Parameter Passing:** Each DP rank `i` sends its edge parameters to DP `i-1`. DP `i-1` is then responsible for the computation on these edge parameters. After calculation, the result is sent back to rank `i` to update the portion it maintains. This avoids redundant computation, and the communication volume is actually better than the brainless gather method. However, for extreme cases, like a parameter spanning three DP ranks, this requires more complex heuristic arrangements.
 3. **Heuristic Precision Arrangement:** When arranging the distributed optimizer, prevent the DP edge-splitting from happening in the first place. This eliminates any extra communication and computation. The cost is that memory allocation is no longer balanced, and finding the optimal allocation becomes a knapsack problem. Unbalanced memory allocation is obviously unacceptable for infrastructure engineers as it leads to inaccurate memory estimation during training, affecting the parallel allocation strategy.
 
-In practice, Moonshot uses the **brainless gather method** because it is the simplest to implement and covers all edge cases.  Crucially, the overhead is **small**—only parameters that straddle a DP boundary (≈ `DP × 2`) incur duplicate computation or extra communication. Other parameters, like `param0` and `param2` in the diagram, are complete and don't require any extra work.
+In practice, Moonshot uses the **brainless gather method** because it's simple and the overhead is tiny. The whole hack is ~10 LOC – infra teams cheer. Only the `DP×2` edge slices need this treatment; all other parameters are complete and don't require any extra work.
 
-Empirically, the actual performance of this communication and computation will be affected by the number of DP ranks and the maximum matrix size in the model. Considering modern MoE architectures (thanks, DeepSeek-V2), a model won't have excessively large matrices because they are all fine-grained experts (and word embedding/lm_head are controlled by AdamW, not Muon). Therefore, in the long run, Muon's scalability has a bright future and is steadily improving.
+Empirically, the overhead is negligible because modern MoE architectures (thanks, DeepSeek-V2) don't have single, monstrously large matrices. Instead, they use many fine-grained experts (and things like word embedding/lm_head are handled by AdamW, not Muon). Therefore, in the long run, Muon's scalability has a bright future.
 
-Since the cost of the brainless method is already low, the benefits of engineering a more complex solution are minimal, which is likely why "Jiang Kernel" (a nickname for a key person) didn't have the motivation to pursue it further (though I recall You Jiacheng might have implemented some similar solutions on Speedrun?).
+Since the cost of the brainless method was already so low, the ROI on engineering a fancier solution was minimal, so "Jiang Kernel" had no motivation to continue optimizing (though I remember You Jiacheng might have implemented some similar hacks on Speedrun?).
 
 ### 2.3 Others' Concerns
 
@@ -100,15 +104,15 @@ And a newer version of Megatron-LM[^13] introduced the concept of "buckets." The
 
 ![The new version of Megatron-LM introduces buckets in DDP.](/images/blog_image_4.webp "The new version of Megatron-LM introduces buckets in DDP.")
 
-These updates are actually a "devastating" blow to the Muon implementation that preceded Moonshot's work. This type of Zero-1 implementation causes *every parameter* to be sharded by DP! Whether it's the brainless gather method, the edge-passing method, or the sophisticated arrangement method, all of which are based on "flat-param concat zero-1," they are all ruined. Every parameter now requires communication and redundant recalculation, leading to a massive amount of extra overhead, making Muon unacceptable.
+These updates are a "devastating" blow to the Muon implementation that preceded Moonshot's work. This type of Zero-1 implementation causes *every parameter* to be sharded by DP. The methods we discussed, all based on "flat-param concat zero-1," are completely ruined. Every parameter now requires communication and redundant recalculation, leading to a massive amount of extra overhead – Muon is basically **DOA** under dim-0 sharding.
 
 ### 2.4 Long-Term Solution
 
 Foreign companies are definitely not stupid. Early parallel designs actually all used flat-param concat zero-1[^14]. Later, due to other concerns (mainly that foreign companies have too many GPUs, and flat params are not conducive to overlapping `grad_reduce_scatter` and `params_all_gather`), they switched to dim-0 params sharding Zero-1.
 
-In the context of mandatory dim-0 params sharding, the Moonshot method is indeed not scalable. But this does not mean Muon is inherently unscalable. New solutions will definitely emerge. In fact, I've heard that it seems possible, and someone might already be working on it (smirking dog face emoji).
+In the context of mandatory dim-0 params sharding, the Moonshot method is indeed not scalable. But this does not mean Muon is inherently unscalable. New solutions will definitely emerge. In fact, I've heard that it seems possible, and someone might already be working on it 🐶.
 
-## 3. Concern 2: Muon Needs More Hyperparameters
+## 3. Concern #2 – "Muon needs more hyper-parameters"
 
 Another common complaint is that Muon has several sets of hyperparameters, which is seen as a significant disadvantage compared to AdamW:
 
@@ -122,7 +126,7 @@ Additionally, Muon is designed for matrices[^2]. Non-matrix parameters like word
 
 ### 3.1 Standard Parametrization (SP) + Muon
 
-Let's first look at Muon under SP. When Moonshot started researching/reproducing (i.e., copying) Keller's Muon in its early days (around January 2024)[^15], it looked like this (without weight decay and without the various engineering optimizations added by Mr. You, like the zero-1 optimizations):
+Let's first look at Muon under SP. When Moonshot started researching/reproducing (copying) Keller's Muon in the early period (around December 2024)[^15], it looked like this (without weight decay and without the various engineering optimizations added by Mr. You, like the zero-1 optimizations):
 
 ![Keller Jordan's early version of Muon.](/images/blog_image_5.webp "Keller Jordan's early version of Muon.")
 
@@ -132,7 +136,7 @@ At this stage, there weren't so many outrageous sets of parameters—just one se
 
 This shows that AdamW's update RMS is empirically around 0.2-0.4, while Muon's is much smaller. If you don't increase Muon's update RMS (the simplest way being a dedicated learning rate), Muon simply won't update effectively, making it an unfair comparison.
 
-In the SP setting, if you don't want to tune two sets of parameters, you can directly use Moonshot's work[^3]. By matching the update RMS, it's practically "out-of-the-box." You can use a single set of AdamW hyperparameters. There's plenty of work on how to tune AdamW hyperparameters (e.g., the `stepfun` law). Just copy one and migrate it to Muon using Moonshot's method, and you will likely get good improved loss token efficiency.
+In the SP setting, if you don't want to tune two sets of parameters, you can directly use Moonshot's work[^3]. By matching the update RMS, it's practically "out-of-the-box." You can use a single set of AdamW hyperparameters. There's plenty of work on how to tune AdamW hyperparameters (e.g., the `stepfun` law). Moonshot's adapter means you can literally **copy-paste** any AdamW LR schedule and call it a day. Just copy one and migrate it to Muon using Moonshot's method, and you will likely get good improved loss token efficiency.
 
 In fact, the main contribution of Moonshot's work is here: allowing everyone to migrate to Muon in the SP setting without much thought. My superficial understanding is that this is equivalent to the fastest optimization under a matrix Frobenius norm constraint, which effectively controls the update RMS, similar to AdamW. It meets the requirements of SP, but it's not optimal. For Muon, the theoretically optimal method is the fastest optimization under a spectral norm constraint, which we will discuss next.
 
@@ -142,7 +146,7 @@ The most exciting use of Muon is not SP, but its combination with **µP (Maximal
 
 In short, Muon is almost an optimizer tailor-made for µP. Unlike using µP + AdamW, which introduces many variance-based assumptions, Muon naturally controls the **spectral norm** (because NS mathematically clips the max singular values, and the max singular value *is* the spectral norm by definition). This makes it perfectly suited for the spectral norm control required by high-order µP[^17]!
 
-Looking at Keller's improvement history on Muon, besides infrastructure optimizations by masters like Mr. You, the main evolution was the introduction of µP ideas by the "god-tier" Jeremy Bernstein (Jeremy is an author of both µP and the Muon blog, so he's a double-threat).
+Looking at Keller's improvement history on Muon, besides infrastructure optimizations by masters like Mr. You, the main evolution was the introduction of µP ideas by Jeremy Bernstein (Jeremy is an author of both µP and the Muon blog, so he's double god-tier).
 
 After introducing ideas similar to µP, the Embedding, LM Head, and Hidden Matrices all got their own control logic[^19]. Although it seems outrageous, it's reasonable when you consider the need to adapt to µP (in fact, adapting AdamW for µP also requires learning rate adjustments for different modules).
 
@@ -177,13 +181,15 @@ And the spectral norm is directly tied to the maximum logit size, i.e.
 
 (where `W` is a matrix, so `||W||₂` is its spectral norm). The most direct approach is to control the spectral norm. However, the spectral norm is difficult to calculate. So, we can use the inequality relationship between spectral and Frobenius norms and directly clip the Frobenius norm. By doing so, `||xW||_2` will be controlled!
 
-But later I had a chance to chat with Su Yin, and he said he didn't think that far ahead, and my understanding might not be right (I was floored). His idea was to directly operate on the fundamental problem. Su Yin mentioned he will be releasing a blog post in the next few days, so keep an eye out for that.
+But later I had a chance to chat with Su Yin, and he said he didn't think that far ahead, and my understanding might not be right (人麻了). His idea was to directly operate on the fundamental problem. Su Yin mentioned he will be releasing a blog post in the next few days, so keep an eye out for that.
 
 ## 5. Conclusion
 
-I feel that K2 is going to be a very powerful model, and I look forward to more evaluations from the community. Additionally, Moonshot has been very strong in Vision-Language (VL) and Reinforcement Learning (RL) before, so we can expect that after some more training, a K2-based model for thinking and vision understanding will have a chance to shine!
+K2 is shaping up to be **cracked**.  
+Moonshot already crushes VL + RL; once they stack **thinking + vision** on K2, expect fireworks.
 
-At the same time, as a company with many masters like Su Yin, "Jiang Kernel," and Feilaige's own Zhang Yu, Moonshot feels very promising! Moreover, Moonshot not only implements fancy new technologies like Muon but also generously acknowledges and uses advanced technologies from competitors. I feel that shows great character and vision!
+With Su Yin, Jiang-kernel, and Feilai-Pavilion’s Zhang Yu on the roster, Moonshot’s ceiling is sky-high.  
+A company that ships Muon **and** happily borrows DeepSeek’s MLA? That’s big-dick energy.
 
 ---
 
