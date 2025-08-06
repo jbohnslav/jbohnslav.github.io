@@ -2,49 +2,81 @@
 title: "Vibe checking GPT-OSS with vLLM, Modal, and Textual"
 date: 2025-08-06T00:00:00-04:00
 draft: false
-tags: ["vllm", "modal", "textual", "gpt-oss", "openai", "technical"]
+tags: ["vllm", "modal", "textual", "gpt-oss", "openai", "open-source"]
 params:
-  author: "jbohnslav"
+  author: "Jim Robinson-Bohnslav"
 ---
 
-OpenAI's just open-sourced their first model since GPT2. I wanted to try out a few prompts, check the vibes, and see OpenAI's raw reasoning traces for the first time. Alas, [gpt-oss.com](http://gpt-oss.com) was down for the whole day. Inference providers weren't up yet. My old code didn't use the [Responses API](https://platform.openai.com/docs/api-reference/responses), so I couldn't see the reasoning trace or change the reasoning effort.
+OpenAI's just open-sourced their first model since GPT2. I wanted to try out a few prompts, check the vibes, and see OpenAI's raw reasoning traces for the first time. Alas, [gpt-oss.com](http://gpt-oss.com) was down for launch day and most inference providers weren't up yet. My old code didn't use the [Responses API](https://platform.openai.com/docs/api-reference/responses), so I couldn't see the reasoning trace or change the reasoning effort.
 
-So, I basically just smashed five blog posts together to make a Modal vLLM server and a Textual Python client where we can chat with GPT-OSS-120b!
+So, I basically mashed up five blog posts into a Modal vLLM server and a Textual Python client where we can chat with GPT-OSS-120b! The tokens per second are excellent on a single H100. Shout out to OpenAI and vLLM for great day-one performance.
 
-{{< video src="/videos/textual_gptoss.mp4" width="100%" >}}{{< /video >}}
+Here's a video of it in real-time.
+
+
+{{< video src="/videos/textual_gptoss.webm" width="100%" >}}{{< /video >}}
 
 > Check out the code **[on my GitHub](https://github.com/jbohnslav/modal_chat).**
 
+Quick-start:
+
+```bash
+git clone https://github.com/jbohnslav/modal_chat
+cd modal_chat
+uv sync && source .venv/bin/activate      # install deps (Python 3.12+)
+modal setup                               # if you haven't already
+modal deploy vllm_server.py               # launch the server on Modal
+export OPENAI_BASE_URL=https://<user>--vllm-server-serve.modal.run/v1
+python textual_client.py                  # open the chat UI
+```
+
+
 ## Running GPT-OSS on Modal
 
-Modal gives me $30 per month of free GPUs and spins up and down quickly. This seemed ideal for my "try out GPT-OSS-120B for a few minutes" application.
+Although OpenAI did a great job ensuring that these models fit onto a single H100, you still need at least one. Modal gives away $30 per month of free GPUs and spins up and down quickly. This seemed ideal for my "try out GPT-OSS-120B for a few minutes" application.
 
-The key bits [of the modal vllm server script](https://github.com/jbohnslav/modal_chat/blob/main/vllm_server.py) are setting up the server with Modal's docker-like syntax:
+The first key bit [of setting up the vLLM server](https://github.com/jbohnslav/modal_chat/blob/main/vllm_server.py) is defining the image with Modal's Dockerfile-like syntax:
 
 ```python
 vllm_image = (
     modal.Image.from_registry(f"nvidia/cuda:{tag}", add_python="3.12")
     .entrypoint([])  # remove verbose logging by base image on entry
     .uv_pip_install(
-        "vllm==0.10.1+gptoss",
+        "vllm==0.10.1+gptoss", # use the +gptoss tag to get the latest version of vLLM with GPT-OSS support
         extra_index_url="https://wheels.vllm.ai/gpt-oss/",
         pre=True,
+        # we need a second index url for the nightly pytorch wheel
         extra_options="--extra-index-url https://download.pytorch.org/whl/nightly/cu128 --index-strategy unsafe-best-match",
     )
     .uv_pip_install("huggingface_hub[hf_transfer]")
     .env(
         {
-            "HF_HUB_ENABLE_HF_TRANSFER": "1",
-            "VLLM_USE_V1": "1",
+            "HF_HUB_ENABLE_HF_TRANSFER": "1", # speed up downloading weights
+            "VLLM_USE_V1": "1", # use the new v1 API. It's default, but let's be explicit
             "TORCH_CUDA_ARCH_LIST": "9.0;10.0",  # H100/H200 (9.0) and B200 (10.0)
         }
     )
 )
 ```
 
-and running a subprocess call but within a modal `app.function` and `modal.web_server`, which will give us a public API we can use. A note on the memory snapshot: I experimented with this to try to reduce my cold-start time, but I haven't been able to get it to work yet.
+The second key bit is starting the vLLM server with a subprocess call, but within Modal `app.function` and `modal.web_server` decorators. This will give us a public API we can use. **Security note:** This will give you a public link with no authentication. If you don't want randos to use your vLLM server, you should at least set your `VLLM_API_KEY` in both the server and client. Presumably Modal has more security features, but we don't need them for this simple demo.
 
 ```python
+# Configuration
+MODEL_NAME = "openai/gpt-oss-120b"
+MODEL_REVISION = None  # Optional: specific revision
+GPU_TYPE = "H100"  # Options: A100, H100, B200, etc.
+N_GPU = 1
+MAX_MODEL_LEN = 65536
+cuda_version = "12.8.1"  # should be no greater than host CUDA version
+flavor = "devel"  # includes full CUDA toolkit
+operating_sys = "ubuntu24.04"
+tag = f"{cuda_version}-{flavor}-{operating_sys}"
+
+# Create volumes for caching
+hf_cache_vol = modal.Volume.from_name("huggingface-cache", create_if_missing=True)
+vllm_cache_vol = modal.Volume.from_name("vllm-cache", create_if_missing=True)
+
 # Create app
 app = modal.App("vllm-server")
 
@@ -58,7 +90,8 @@ app = modal.App("vllm-server")
         "/root/.cache/huggingface": hf_cache_vol,
         "/root/.cache/vllm": vllm_cache_vol,
     },
-    enable_memory_snapshot=True, # I don't think this works properly yet
+    # the below flags are experimental: see more below
+    enable_memory_snapshot=True, 
     experimental_options={"enable_gpu_snapshot": True},
 )
 @modal.concurrent(max_inputs=2)
@@ -84,19 +117,15 @@ def serve() -> None:
     subprocess.Popen(" ".join(cmd), shell=True)
 ```
 
-**Note:** This will give you a public link with no authentication. If you don't want randos to use your GPU, you at least set `VLLM_API_KEY` in both the server and client.
-
 Click the resulting link so that you can see the logs in Modal's beautiful viewer. Here's mine.
 
 ![Modal logs screenshot](/images/modal_ss.png)
 
-You can see vLLM spinning up, loading safetensors, etc. After a few minutes (could've been faster if I'd disabled cuda graphs and torch.compile), you'll see
+You can see vLLM spinning up, loading safetensors, etc. It takes a surprisingly long time: in my screenshot below, you can see it takes more than 4 minutes from container start to the server being ready. I tried to use the memory snapshot feature and the [experimental GPU snapshot feature](https://modal.com/blog/gpu-mem-snapshots) but it had no effect. I expect that I'm doing something wrong in my Modal configuration, but that's an experiment for another day.
 
-```bash
-(APIServer pid=5) INFO:     Application startup complete.
-```
+![Modal logs showing 4 minute cold start time](/images/modal_cold_start.png)
 
-Test with standard OpenAI API calls:
+After you see the logs say `Application startup complete`, you can start sending requests to the server. vLLM, blessedly, exposes an openAI-compatible API so we can test with standard OpenAI API calls:
 
 ```bash
 export OPENAI_BASE_URL=https://{your-modal-username}--vllm-server-serve.modal.run/v1
@@ -120,7 +149,7 @@ The hardest part was debugging Textual's streaming markdown handling, but after 
 
 ![Textual UI screenshot](/images/textual_ui.png)
 
-Now that we have the vibe-tooling, the vibe-checking can begin.
+Now that we have the vibe-tooling, the vibe-checking can begin. Try it out yourself: run the code in the [modal_chat](https://github.com/jbohnslav/modal_chat) repo. For questions or comments, [find me on Twitter](https://x.com/jbohnslav).
 
 ## References
 
