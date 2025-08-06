@@ -13,7 +13,7 @@ So, I basically mashed up five blog posts into a Modal vLLM server and a Textual
 
 Here's a video of it in real-time.
 
-{{< video src="/videos/textual_gptoss.webm" width="100%" >}}{{< /video >}}
+{{< video src="/videos/textual_gptoss.mp4" width="100%" >}}{{< /video >}}
 
 > Check out the code **[on my GitHub](https://github.com/jbohnslav/modal_chat).**
 
