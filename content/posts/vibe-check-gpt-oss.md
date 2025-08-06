@@ -13,7 +13,6 @@ So, I basically mashed up five blog posts into a Modal vLLM server and a Textual
 
 Here's a video of it in real-time.
 
-
 {{< video src="/videos/textual_gptoss.webm" width="100%" >}}{{< /video >}}
 
 > Check out the code **[on my GitHub](https://github.com/jbohnslav/modal_chat).**
@@ -29,7 +28,6 @@ modal deploy vllm_server.py               # launch the server on Modal
 export OPENAI_BASE_URL=https://<user>--vllm-server-serve.modal.run/v1
 python textual_client.py                  # open the chat UI
 ```
-
 
 ## Running GPT-OSS on Modal
 
