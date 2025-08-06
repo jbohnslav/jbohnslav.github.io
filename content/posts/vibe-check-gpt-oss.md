@@ -33,7 +33,7 @@ python textual_client.py                  # open the chat UI
 
 ## Running GPT-OSS on Modal
 
-Although OpenAI did a great job ensuring that these models fit onto a single H100, you still need at least one. Modal gives away $30 per month of free GPUs and spins up and down quickly. This seemed ideal for my "try out GPT-OSS-120B for a few minutes" application.
+Although OpenAI did a great job ensuring that these models fit onto a single H100, you still need at least one. Modal gives away $30 per month of free GPUs and spins up and down quickly. This seemed ideal for my "try out GPT-OSS-120B for a few minutes" application. *Edit*: Since I wrote this post, [Modal wrote their own inference script for gpt-oss](https://modal.com/docs/examples/gpt-oss).
 
 The first key bit [of setting up the vLLM server](https://github.com/jbohnslav/modal_chat/blob/main/vllm_server.py) is defining the image with Modal's Dockerfile-like syntax:
 
