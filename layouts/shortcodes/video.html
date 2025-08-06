@@ -1,0 +1,36 @@
+{{- /*
+ Shortcode: video
+ Usage: {{< video src="/videos/example.mp4" width="600" >}}
+ Accepts parameters:
+   src      (required) - path or URL to video file
+   width              - width attribute (numeric or percentage)
+   height             - height attribute
+   poster             - poster image URL
+   autoplay           - boolean flag to autoplay
+   loop               - boolean flag to loop video
+   muted              - boolean flag to mute audio
+   controls           - include to explicitly render controls (controls are on by default)
+
+ Any inner content will be rendered as fallback text if browser does not support the video tag.
+*/ -}}
+{{- $src := .Get "src" -}}
+{{- if not $src -}}
+  {{- errorf "video shortcode: src param is required" -}}
+{{- end -}}
+
+<video
+  {{ with .Get "width" }}width="{{ . }}"{{ end }}
+  {{ with .Get "height" }}height="{{ . }}"{{ end }}
+  {{ with .Get "poster" }}poster="{{ . }}"{{ end }}
+  {{ if .Get "autoplay" }}autoplay{{ end }}
+  {{ if .Get "loop" }}loop{{ end }}
+  {{ if .Get "muted" }}muted{{ end }}
+  controls
+>
+  <source src="{{ $src }}" type="video/mp4">
+  {{ if .Inner }}
+    {{ .Inner }}
+  {{ else }}
+    Your browser does not support the video tag.
+  {{ end }}
+</video>
