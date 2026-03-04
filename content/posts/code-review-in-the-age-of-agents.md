@@ -28,8 +28,8 @@ The lesson for code review is the same: **stop inspecting the algorithm. Verify 
 ### Verify Inputs — Is the Design Sound?
 
 - **Architecture:** Are you coupling components that should be separated? Will adding a feature on the roadmap require a rewrite? Basically, classic system design.
-- **Blast radius:** This is the big one. Are you going to break other team members' ongoing work? Have you checked with them? Or _potentially_ break it? Have you run the actual prod code paths — not just unit tests — and verified nothing downstream is affected?
-- **Technology choices vs. team context:** Sure, you vibe-coded an internal tool that uses Rust, but nobody on the team knows Rust. Is that the right call?
+- **Blast radius:** This is the big one. Are you going to break other team members' ongoing work? Have you checked with them? Or *potentially* break it? Have you run the actual prod code paths — not just unit tests — and verified nothing downstream is affected?
+- **Technology choices vs. team context:** Sure, you vibe-coded an internal tool that uses Rust, but nobody on the team knows Rust. Claude Code will go down at some point. It's also not *quite* as intelligent as a human SWE: we may have to dig in and fix bugs ourselves. *Someone* on the team needs a mental model of the code.
 
 Blast radius is the irreducibly human part of review. No AI reviewer knows your team, your org, or who's mid-flight on what. Review agents don't know the team has a big upcoming deadline, so modules A, B, and C absolutely can't break until next Tuesday.
 
