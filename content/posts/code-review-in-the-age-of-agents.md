@@ -23,13 +23,18 @@ As Karpathy put it: *gradient descent can write better code than you.* At the ti
 
 The lesson for code review is the same: **stop inspecting the algorithm. Verify the inputs and outputs.** The "inputs" to an agentic coding process are requirements, designs, constraints, and high level decisions; the "outputs" are working artifacts: features, metrics, screenshots, data products, etc.
 
+## What PR Authors Should Actually Do
+
+- **Put your inputs in the description.** This is core to understanding the agent's implementation: what did you tell Claude or Codex to *do*? Did you prompt it to prioritize speed or reliability? What requirements or constraints did you set?
+- **Put your outputs in the description.**  You built a web app? Put a screenshot in. How does it look? How did it change? Is this complex feature something only the engineer wants, or does it benefit the whole team?
+
 ## What Reviewers Should Actually Do
 
 ### Verify Inputs — Is the Design Sound?
 
-- **Architecture:** Are you coupling components that should be separated? Will adding a feature on the roadmap require a rewrite? Basically, classic system design.
-- **Blast radius:** This is the big one. Are you going to break other team members' ongoing work? Have you checked with them? Or *potentially* break it? Have you run the actual prod code paths — not just unit tests — and verified nothing downstream is affected?
-- **Technology choices vs. team context:** Sure, you vibe-coded an internal tool that uses Rust, but nobody on the team knows Rust. Claude Code will go down at some point. It's also not *quite* as intelligent as a human SWE: we may have to dig in and fix bugs ourselves. *Someone* on the team needs a mental model of the code.
+- **Architecture:** Did the PR author couple components that should be separated? Will adding a feature on the roadmap require a rewrite? Basically, classic system design.
+- **Blast radius:** This is the big one. Is this PR going to break other team members' ongoing work? Have you checked with them? Does the code change *risk *=potentially* breaking others' work? Did the authors actually run the actual prod code paths — not just unit tests — and verified nothing downstream is affected?
+- **Technology choices vs. team context:** Sure, the authors vibe-coded an internal tool that uses Rust, but nobody on the team knows Rust. Claude Code will go down at some point. It's also not *quite* as intelligent as a human SWE: we may have to dig in and fix bugs ourselves from time to time. *Someone* on the team needs a mental model of the code.
 
 Blast radius is the irreducibly human part of review. No AI reviewer knows your team, your org, or who's mid-flight on what. Review agents don't know the team has a big upcoming deadline, so modules A, B, and C absolutely can't break until next Tuesday.
 
@@ -39,9 +44,8 @@ AI review tools (e.g. Cursor Bugbot, or prompted Claude Code + Codex) will do a 
 
 Instead, reviewers should focus on **proof that the code works as intended:**
 
-- You wrote a data pipeline? Did you run it on prod data? How fast was it? Are the outputs identical? If they aren't, did you talk to downstream consumers?
-- You changed the training pipeline? Did you do an overfitting test? Is it faster, slower, better, worse?
-- You built a web app? Put a screenshot in. How does it look? How did it change? Is this complex feature something only the engineer wants, or does it benefit the whole team?
+- The PR rewrote a data pipeline? Did the authors run it on prod data? How fast was it? Are the outputs identical? If they aren't, did the authors communicate with downstream consumers?
+- The PR changed the training pipeline? Did the authors do an overfitting test? Is it faster, slower, better, worse?
 
 The reviewer becomes a verifier, not a code inspector.
 
